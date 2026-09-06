@@ -1,0 +1,20 @@
+[
+  {
+    "coin": "BTC",
+    "label": "Bitcoin (BTC)",
+    "network": "Bitcoin",
+    "address": "lklsjknfdmaldklfsknkdmlcel;f,md..e/cf,m."
+  },
+  {
+    "coin": "ETH",
+    "label": "Ethereum (ETH)",
+    "network": "ERC20 (Ethereum)",
+    "address": "pelkwjkjeklq32iuop4iuri2io4opid"
+  },
+  {
+    "coin": "USDT",
+    "label": "Tether (USDT)",
+    "network": "TRC20 (Tron)",
+    "address": "e;wkljrfrwklelklrjfjrwleq;rkwfnrml;leqkrfw"
+  }
+]
