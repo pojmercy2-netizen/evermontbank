@@ -10,7 +10,7 @@
 
       <!-- Banking Image Banner -->
       <div class="services-image-banner">
-        <img src="/banking-services.png" alt="Evermont Bank banking services overview" class="services-banner-img" />
+        <img src="/banking-services.png" alt="Evermont Bank banking services overview" class="services-banner-img" loading="lazy" decoding="async" />
         <div class="services-banner-overlay">
           <div class="banner-badge">
             <Icon name="lucide:shield-check" :size="16" class="banner-badge-icon" />

@@ -6,7 +6,7 @@
         <div class="footer-brand">
           <div class="footer-logo">
             <div class="logo-icon">
-              <img src="/logo.png" alt="Evermont Bank Logo" class="logo-img" />
+              <img src="/logo.png" alt="Evermont Bank Logo" class="logo-img" loading="lazy" />
             </div>
           </div>
           <p class="footer-desc">

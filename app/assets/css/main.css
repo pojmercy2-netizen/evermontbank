@@ -737,3 +737,95 @@ button {
 .lang-option:hover {
   background-color: #f0f4f9;
 }
+
+/* ============================================================
+   PERFORMANCE — CONTENT VISIBILITY
+   Tells the browser to skip rendering below-fold sections until
+   they scroll into view. Major LCP / INP improvement.
+   ============================================================ */
+.features-section,
+.services-section,
+.stats-section,
+.testimonials-section,
+.about-section,
+.faq-section,
+.contact-section,
+.cta-section {
+  content-visibility: auto;
+  /* Estimated section height so the browser can reserve scroll space */
+  contain-intrinsic-size: 0 600px;
+}
+
+/* ============================================================
+   PERFORMANCE — GPU COMPOSITING HINTS
+   Promote animated/transform elements to their own GPU layers
+   to avoid triggering layout/paint during animations.
+   ============================================================ */
+.hero-card,
+.hero-floating-pill,
+.mesh-color,
+.hero-gradient-orb,
+.ring,
+.stats-blob,
+.ripple-glow {
+  will-change: transform;
+  transform: translateZ(0); /* force GPU layer */
+}
+
+/* ============================================================
+   PAGE TRANSITIONS (Nuxt page/layout transitions)
+   ============================================================ */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.layout-enter-active,
+.layout-leave-active {
+  transition: opacity 0.15s ease;
+}
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+}
+
+/* ============================================================
+   PREFERS REDUCED MOTION
+   Respect user OS setting — disable all animations for
+   accessibility and low-power devices.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .ripple-glow,
+  .ring,
+  .stats-blob,
+  .hero-gradient-orb,
+  .mesh-color {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   IMAGE OPTIMISATION DEFAULTS
+   Ensure all images use efficient decoding and loading
+   ============================================================ */
+img {
+  decoding: async;
+}
+

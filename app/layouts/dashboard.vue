@@ -11,7 +11,7 @@
     <aside class="dashboard-sidebar" :class="{ open: isSidebarOpen }">
       <div class="sidebar-header">
         <NuxtLink to="/" class="sidebar-logo">
-          <img src="/logo.png" alt="Evermont Bank Logo" class="logo-img" />
+          <img src="/logo.png" alt="Evermont Bank Logo" class="logo-img" fetchpriority="high" />
         </NuxtLink>
       </div>
 
@@ -64,7 +64,7 @@
 
         <div class="topbar-logo-mobile">
           <NuxtLink to="/dashboard">
-            <img src="/logo.png" alt="Auxtrusunion Bank Logo" class="mobile-logo-img" />
+            <img src="/logo.png" alt="Evermont Bank Logo" class="mobile-logo-img" fetchpriority="high" />
           </NuxtLink>
         </div>
 

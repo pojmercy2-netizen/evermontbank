@@ -77,7 +77,8 @@ const stats = [
   background: radial-gradient(circle, rgba(0, 102, 255, 0.12) 0%, transparent 70%);
   top: -200px;
   right: -100px;
-  animation: blobFloat 10s ease-in-out infinite;
+  transform: translateZ(0);
+  animation: blobFloat 16s ease-in-out infinite;
 }
 
 .stats-blob-2 {
@@ -86,12 +87,13 @@ const stats = [
   background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
   bottom: -150px;
   left: -80px;
-  animation: blobFloat 13s ease-in-out infinite reverse;
+  transform: translateZ(0);
+  animation: blobFloat 20s ease-in-out infinite reverse;
 }
 
 @keyframes blobFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%       { transform: translate(20px, -30px) scale(1.08); }
+  50%       { transform: translate(12px, -18px) scale(1.04); }
 }
 
 /* Header */

@@ -9,21 +9,29 @@ const route = useRoute()
 const isDashboard = computed(() => route.path.startsWith('/dashboard'))
 
 onMounted(() => {
-  // Set the configuration before loading the script
-  if (typeof window !== 'undefined') {
-    (window as any).gtranslateSettings = {
+  if (typeof window === 'undefined') return
+
+  const loadGTranslate = () => {
+    if ((window as any)._gt_injected || document.querySelector('script[src*="gtranslate"]')) return
+    ;(window as any)._gt_injected = true
+
+    ;(window as any).gtranslateSettings = {
       default_language: 'en',
       wrapper_selector: '.gtranslate_wrapper',
       flag_style: '3d'
     }
 
-    // Only inject the script once
-    if (!document.querySelector('script[src*="gtranslate"]')) {
-      const script = document.createElement('script')
-      script.src = 'https://cdn.gtranslate.net/widgets/latest/float.js'
-      script.defer = true
-      document.body.appendChild(script)
-    }
+    const script = document.createElement('script')
+    script.src = 'https://cdn.gtranslate.net/widgets/latest/float.js'
+    script.defer = true
+    document.body.appendChild(script)
+  }
+
+  // Defer slightly so page loads instantly first
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => setTimeout(loadGTranslate, 1500))
+  } else {
+    setTimeout(loadGTranslate, 2000)
   }
 })
 </script>

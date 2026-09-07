@@ -44,21 +44,21 @@ let timer2: ReturnType<typeof setTimeout>
 let interval: ReturnType<typeof setInterval>
 
 onMounted(() => {
-  // Cycle status messages
+  // Cycle status messages slowly — no need for rapid updates
   interval = setInterval(() => {
     statusIdx.value = (statusIdx.value + 1) % statusMessages.length
-  }, 200)
+  }, 800)
 
-  // Simulated load completion timer
+  // Keep loader visible briefly then exit
   timer1 = setTimeout(() => {
     clearInterval(interval)
     exiting.value = true
 
-    // Unmount after exit animation (300ms)
+    // Unmount after exit animation (150ms)
     timer2 = setTimeout(() => {
       visible.value = false
-    }, 300)
-  }, 600)
+    }, 150)
+  }, 350)
 })
 
 onBeforeUnmount(() => {

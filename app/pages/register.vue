@@ -6,8 +6,8 @@
         <p class="auth-subtitle">Join Evermont Bank and bank smarter today</p>
       </div>
       
-      <div v-if="auth.error.value" class="error-banner">
-        ⚠️ {{ auth.error.value }}
+      <div v-if="error" class="error-banner">
+        ⚠️ {{ error }}
       </div>
       
       <form @submit.prevent="handleSubmit">
@@ -43,40 +43,34 @@
             class="form-input" 
             placeholder="Enter your 10-digit phone number"
             v-model="phone"
-            minlength="10"
-            required 
           />
         </div>
 
         <div class="form-group">
           <label class="form-label" for="accountType">Account Type</label>
-          <select 
-            id="accountType" 
-            class="form-input form-select" 
-            v-model="accountType"
-            required 
-          >
+          <select id="accountType" class="form-select" v-model="accountType" required>
             <option value="" disabled>Select account type</option>
-            <option value="checking">Everyday Checking</option>
+            <option value="checking">Checking Account</option>
             <option value="savings">High-Yield Savings</option>
             <option value="business">Business Checking</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label class="form-label" for="password">Password</label>
           <input 
             type="password" 
             id="password" 
             class="form-input" 
-            placeholder="Create a strong password"
+            placeholder="Create a strong password (min 8 characters)" 
             v-model="password"
             required 
+            minlength="8"
           />
         </div>
         
-        <button type="submit" class="btn btn-primary auth-btn mt-3" :disabled="auth.isLoading.value">
-          <span v-if="auth.isLoading.value" class="flex items-center gap-2">
+        <button type="submit" class="btn btn-primary auth-btn mt-3" :disabled="isLoading">
+          <span v-if="isLoading" class="flex items-center gap-2">
             <Icon name="i-lucide-loader-2" class="spin w-4 h-4" />
             Creating Account...
           </span>
@@ -104,10 +98,10 @@ const phone = ref('')
 const accountType = ref('')
 const password = ref('')
 
-const auth = useAuth()
+const { error, isLoading, register } = useAuth()
 
 const handleSubmit = async () => {
-  await auth.register(
+  await register(
     email.value,
     password.value,
     fullName.value,

@@ -11,8 +11,11 @@
       <span class="ripple-glow"></span>
       <span class="ripple-glow secondary"></span>
 
-      <!-- Icon -->
-      <Icon name="logos:whatsapp-icon" class="whatsapp-icon" />
+      <!-- Icon (inline SVG for instant zero-network rendering) -->
+      <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.472 14.382C17.115 14.203 15.361 13.342 15.034 13.223C14.707 13.104 14.469 13.045 14.231 13.402C13.993 13.759 13.308 14.563 13.099 14.801C12.891 15.039 12.683 15.069 12.326 14.89C11.969 14.712 10.822 14.336 9.463 13.125C8.398 12.176 7.679 10.999 7.471 10.642C7.263 10.285 7.449 10.092 7.628 9.914C7.789 9.754 7.987 9.492 8.165 9.284C8.344 9.076 8.403 8.927 8.522 8.689C8.641 8.451 8.582 8.243 8.493 8.065C8.403 7.886 7.689 6.13 7.391 5.416C7.102 4.72 6.809 4.814 6.589 4.803C6.381 4.793 6.143 4.793 5.905 4.793C5.667 4.793 5.28 4.882 4.953 5.239C4.626 5.596 3.703 6.459 3.703 8.215C3.703 9.971 4.983 11.667 5.161 11.905C5.34 12.143 7.679 15.751 11.261 17.299C12.113 17.667 12.777 17.886 13.296 18.051C14.153 18.323 14.933 18.285 15.551 18.193C16.241 18.09 17.671 17.327 17.969 16.494C18.267 15.661 18.267 14.947 18.177 14.798C18.088 14.65 17.829 14.561 17.472 14.382Z" fill="#FFFFFF"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.004 2C6.484 2 2.008 6.477 2.008 12C2.008 13.766 2.468 15.426 3.272 16.87L2.052 21.328L6.643 20.125C8.033 20.883 9.621 21.314 12.004 21.314C17.524 21.314 22 16.837 22 11.314C22 5.792 17.524 2 12.004 2ZM12.004 19.628C9.988 19.628 8.163 19.006 6.666 17.938L6.31 17.685L3.587 18.4L4.316 15.744L4.038 15.302C2.887 13.469 2.25 11.304 2.25 12C2.25 6.615 6.619 2.246 12.004 2.246C17.389 2.246 21.758 6.615 21.758 12C21.758 17.385 17.389 19.628 12.004 19.628Z" fill="#FFFFFF"/>
+      </svg>
 
       <!-- Tooltip / Label -->
       <span class="widget-tooltip">
@@ -24,38 +27,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 
 const route = useRoute()
+const { settings, fetchSettings } = useSettings()
 
 // Detect if we are inside the dashboard to adjust mobile layout offset
 const isDashboard = computed(() => route.path.startsWith('/dashboard'))
 
-const rawPhone = ref('+1 (800) 555-0199')
-
 // Strip non-digits to get a clean number for wa.me/ link
-const formattedPhone = computed(() => {
-  return rawPhone.value.replace(/[^0-9]/g, '')
-})
+const formattedPhone = computed(() => settings.value.supportPhone.replace(/[^0-9]/g, ''))
 
 const whatsappUrl = computed(() => {
-  const text = encodeURIComponent("Hello! I need support with my Evermont Bank account.")
+  const text = encodeURIComponent('Hello! I need support with my Evermont Bank account.')
   return `https://wa.me/${formattedPhone.value}?text=${text}`
 })
-
-const fetchSettings = async () => {
-  try {
-    const res = await $fetch<any>('/api/settings')
-    if (res?.success && res?.data) {
-      const data = res.data?.data ?? res.data
-      if (data.supportPhone) {
-        rawPhone.value = data.supportPhone
-      }
-    }
-  } catch {
-    // Fallback quietly to default
-  }
-}
 
 onMounted(() => {
   fetchSettings()

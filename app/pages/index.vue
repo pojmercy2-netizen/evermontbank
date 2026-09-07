@@ -1,15 +1,18 @@
 <template>
   <div>
+    <!-- Above the fold: load immediately -->
     <HeroSection />
     <TrustBar />
-    <FeaturesSection />
-    <ServicesSection />
-    <StatsSection />
-    <TestimonialsSection />
-    <AboutSection />
-    <FaqSection />
-    <ContactSection />
-    <CtaSection />
+
+    <!-- Below the fold: lazy load (code-split + deferred hydration) -->
+    <LazyFeaturesSection />
+    <LazyServicesSection />
+    <LazyStatsSection />
+    <LazyTestimonialsSection />
+    <LazyAboutSection />
+    <LazyFaqSection />
+    <LazyContactSection />
+    <LazyCtaSection />
   </div>
 </template>
 

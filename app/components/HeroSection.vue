@@ -186,23 +186,32 @@ const heroRef = ref<HTMLElement | null>(null)
 const rotate = ref({ x: 12, y: -14 })
 const isHovering = ref(false)
 
+// Throttle via rAF — prevents reactive updates faster than 60fps
+let rafPending = false
+
 const handleMouseMove = (e: MouseEvent) => {
-  if (!heroRef.value) return
-  const rect = heroRef.value.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  const centerX = rect.width / 2
-  const centerY = rect.height / 2
-  rotate.value = {
-    x: ((y - centerY) / centerY) * -16,
-    y: ((x - centerX) / centerX) * 16
-  }
-  isHovering.value = true
+  if (rafPending || !heroRef.value) return
+  rafPending = true
+  requestAnimationFrame(() => {
+    if (!heroRef.value) { rafPending = false; return }
+    const rect = heroRef.value.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    rotate.value = {
+      x: ((y - centerY) / centerY) * -16,
+      y: ((x - centerX) / centerX) * 16
+    }
+    isHovering.value = true
+    rafPending = false
+  })
 }
 
 const handleMouseLeave = () => {
   rotate.value = { x: 12, y: -14 }
   isHovering.value = false
+  rafPending = false
 }
 </script>
 
@@ -238,8 +247,10 @@ const handleMouseLeave = () => {
 .mesh-color {
   position: absolute;
   border-radius: 50%;
-  filter: blur(95px);
+  /* Reduced from 95px — blur is O(radius²), so 60px is ~60% cheaper on GPU */
+  filter: blur(60px);
   will-change: transform;
+  transform: translateZ(0);
 }
 
 /* Warm Radiant Gold Aura on the right / visual side */
@@ -282,15 +293,15 @@ const handleMouseLeave = () => {
 
 @keyframes floatGold {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-35px, 25px) scale(1.08); }
+  50% { transform: translate(-20px, 15px) scale(1.04); }
 }
 @keyframes floatGoldRev {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(25px, -30px) scale(0.95); }
+  50% { transform: translate(15px, -18px) scale(0.97); }
 }
 @keyframes floatSapphire {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(30px, -25px) scale(1.05); }
+  50% { transform: translate(18px, -15px) scale(1.03); }
 }
 
 /* Precision Geometric Line Grid */
@@ -328,11 +339,13 @@ const handleMouseLeave = () => {
 .ring-2 { width: 500px; height: 500px; border: 1px dashed rgba(212, 175, 55, 0.12); }
 .ring-3 { width: 660px; height: 660px; border: 1px solid rgba(99, 102, 241, 0.08); }
 
-/* Ambient Orbs */
+/* Ambient Orbs — reduced blur from 140px for GPU performance */
 .hero-gradient-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(140px);
+  filter: blur(80px);
+  will-change: transform;
+  transform: translateZ(0);
 }
 .orb-gold {
   width: 500px;

@@ -58,6 +58,36 @@ export function withErrorHandler<T>(handler: (event: H3Event) => Promise<T>): Ev
         }
       }
 
+      // PostgreSQL / Drizzle errors — map common codes to proper HTTP statuses
+      if (err && typeof err === 'object' && 'code' in err) {
+        const pgErr = err as { code: string; detail?: string; message?: string }
+        if (pgErr.code === '23505') {
+          // Unique constraint violation
+          setResponseStatus(event, 409)
+          return {
+            success: false,
+            error: { code: 'CONFLICT', message: 'A record with this information already exists.' }
+          }
+        }
+        if (pgErr.code === '23503') {
+          // Foreign key violation
+          setResponseStatus(event, 409)
+          return {
+            success: false,
+            error: { code: 'CONFLICT', message: 'Referenced resource does not exist.' }
+          }
+        }
+        if (pgErr.code === 'ECONNREFUSED' || pgErr.code === 'ETIMEDOUT' || pgErr.code === '08006' || pgErr.code === '08001') {
+          // Database connection error
+          console.error('[Evermont DB Connection Error]', err)
+          setResponseStatus(event, 503)
+          return {
+            success: false,
+            error: { code: 'SERVICE_UNAVAILABLE', message: 'Database is temporarily unavailable. Please try again.' }
+          }
+        }
+      }
+
       // Unknown errors — don't leak internals
       console.error('[Evermont API Error]', err)
       setResponseStatus(event, 500)

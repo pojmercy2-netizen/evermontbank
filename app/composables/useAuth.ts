@@ -53,6 +53,35 @@ export const useAuth = () => {
     }
   })
 
+  /**
+   * Decode a JWT payload without a library — returns null on failure.
+   */
+  const decodeJwtPayload = (jwt: string): Record<string, any> | null => {
+    try {
+      const parts = jwt.split('.')
+      if (parts.length !== 3) return null
+      const base64 = (parts[1]!).replace(/-/g, '+').replace(/_/g, '/')
+      const jsonStr = atob(base64)
+      return JSON.parse(jsonStr)
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Returns true if the stored access token is missing or has expired.
+   * Adds a 30-second buffer so we refresh slightly before expiry.
+   */
+  const isTokenExpired = (): boolean => {
+    if (!import.meta.client) return false  // can't check localStorage on server
+    const t = token.value || localStorage.getItem('authToken')
+    if (!t || t.startsWith('mock_token_')) return false  // mock tokens never expire
+    const payload = decodeJwtPayload(t)
+    if (!payload || !payload.exp) return true
+    const nowSec = Math.floor(Date.now() / 1000)
+    return payload.exp < nowSec + 30  // 30s buffer
+  }
+
   const healthCheck = async (): Promise<boolean> => {
     try {
       const response = await fetch('/api/health', {
@@ -135,10 +164,24 @@ export const useAuth = () => {
 
     try {
       const activeToken = token.value || localStorage.getItem('authToken')
-      let response = await makeRequest(activeToken)
 
-      // Silent refresh on 401 for non-auth endpoints
+      // Proactively refresh the access token if it is expired or about to expire.
+      // This prevents a flood of 401s when multiple components call APIs on mount.
+      let freshToken: string | null = activeToken
       const isAuthEndpoint = endpoint.startsWith('/auth/')
+      if (!isAuthEndpoint && isTokenExpired()) {
+        freshToken = await silentRefresh()
+        if (!freshToken) {
+          logout()
+          const isDashboard = endpoint.startsWith('/dashboard') || !endpoint.startsWith('/admin')
+          navigateTo(isDashboard ? '/login' : '/admin/login')
+          return { success: false, error: 'Session expired. Please log in again.' }
+        }
+      }
+
+      let response = await makeRequest(freshToken)
+
+      // Reactive 401 refresh — catches edge cases (clock skew, race conditions)
       if (response.status === 401 && !isAuthEndpoint && !_isRetry) {
         const newToken = await silentRefresh()
 
@@ -328,6 +371,8 @@ export const useAuth = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('userId')
     localStorage.removeItem('user')
+    // Fire-and-forget: clear the httpOnly refresh_token cookie server-side
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
     navigateTo('/login')
   }
 
@@ -339,6 +384,7 @@ export const useAuth = () => {
     login,
     register,
     logout,
-    apiCall
+    apiCall,
+    isTokenExpired
   }
 }

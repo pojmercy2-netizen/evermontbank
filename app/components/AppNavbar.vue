@@ -4,7 +4,7 @@
 
       <!-- Logo -->
       <NuxtLink to="/" class="navbar-logo" @click="closeMobileMenu">
-        <img src="/logo.png" alt="Evermont Bank" class="logo-img" />
+        <img src="/logo.png" alt="Evermont Bank" class="logo-img" fetchpriority="high" />
       </NuxtLink>
 
       <!-- Desktop Nav Links -->

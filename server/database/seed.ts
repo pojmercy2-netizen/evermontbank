@@ -19,7 +19,7 @@ async function main() {
   }
 
   console.log('Connecting to database for seeding...')
-  const client = postgres(url)
+  const client = postgres(url, { ssl: 'require' })
   const db = drizzle(client)
 
   // Clear existing data

@@ -6,8 +6,8 @@
         <p class="auth-subtitle">Log in to your Evermont Bank account</p>
       </div>
       
-      <div v-if="auth.error.value" class="error-banner">
-        ⚠️ {{ auth.error.value }}
+      <div v-if="error" class="error-banner">
+        ⚠️ {{ error }}
       </div>
       
       <form @submit.prevent="handleLogin">
@@ -38,8 +38,8 @@
           />
         </div>
         
-        <button type="submit" class="btn btn-primary auth-btn mt-3" :disabled="auth.isLoading.value">
-          <span v-if="auth.isLoading.value" class="flex items-center gap-2">
+        <button type="submit" class="btn btn-primary auth-btn mt-3" :disabled="isLoading">
+          <span v-if="isLoading" class="flex items-center gap-2">
             <Icon name="i-lucide-loader-2" class="spin w-4 h-4" />
             Logging In...
           </span>
@@ -63,10 +63,10 @@ useHead({
 
 const email = ref('')
 const password = ref('')
-const auth = useAuth()
+const { error, isLoading, login } = useAuth()
 
 const handleLogin = async () => {
-  await auth.login(email.value, password.value)
+  await login(email.value, password.value)
 }
 
 const handleForgotPassword = async () => {

@@ -71,13 +71,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+
+const { settings, fetchSettings } = useSettings()
 
 const form = reactive({ firstName: '', lastName: '', email: '', subject: '', message: '' })
 const submitted = ref(false)
-
-const supportEmail = ref('support@evermontbank.com')
-const supportPhone = ref('+1 (800) 555-0199')
 
 const submitForm = () => {
   submitted.value = true
@@ -85,22 +84,13 @@ const submitForm = () => {
 }
 
 const channels = computed(() => [
-  { icon: 'lucide:mail', label: 'Email Us', value: supportEmail.value, href: `mailto:${supportEmail.value}` },
-  { icon: 'lucide:phone', label: 'Call Us', value: supportPhone.value, href: `tel:${supportPhone.value.replace(/[^+\d]/g, '')}` },
+  { icon: 'lucide:mail', label: 'Email Us', value: settings.value.supportEmail, href: `mailto:${settings.value.supportEmail}` },
+  { icon: 'lucide:phone', label: 'Call Us', value: settings.value.supportPhone, href: `tel:${settings.value.supportPhone.replace(/[^+\d]/g, '')}` },
   { icon: 'lucide:map-pin', label: 'Head Office', value: '200 Park Avenue, New York, NY 10166', href: '#' }
 ])
 
-onMounted(async () => {
-  try {
-    const res = await $fetch<any>('/api/settings')
-    if (res.success && res.data) {
-      const data = res.data?.data ?? res.data
-      if (data.supportEmail) supportEmail.value = data.supportEmail
-      if (data.supportPhone) supportPhone.value = data.supportPhone
-    }
-  } catch {
-    // Fallback quietly
-  }
+onMounted(() => {
+  fetchSettings()
 })
 </script>
 

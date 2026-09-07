@@ -5,7 +5,7 @@
         <!-- Image -->
         <div class="about-image-wrap">
           <div class="about-image-frame">
-            <img src="/about-us.png" alt="Evermont Bank team at work" class="about-image" />
+            <img src="/about-us.png" alt="Evermont Bank team at work" class="about-image" loading="lazy" decoding="async" />
             <div class="about-image-overlay" />
           </div>
           <!-- Floating stat pill -->

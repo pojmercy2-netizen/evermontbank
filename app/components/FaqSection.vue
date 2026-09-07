@@ -35,25 +35,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+
+const { settings, fetchSettings } = useSettings()
 
 const openIndex = ref<number | null>(0)
 const toggle = (i: number) => { openIndex.value = openIndex.value === i ? null : i }
 
-const supportEmail = ref('support@evermontbank.com')
-
-onMounted(async () => {
-  try {
-    const res = await $fetch<any>('/api/settings')
-    if (res.success && res.data) {
-      const data = res.data?.data ?? res.data
-      if (data.supportEmail) {
-        supportEmail.value = data.supportEmail
-      }
-    }
-  } catch (err) {
-    // Fallback quietly to default
-  }
+onMounted(() => {
+  fetchSettings()
 })
 
 const faqs = computed(() => [
@@ -83,7 +73,7 @@ const faqs = computed(() => [
   },
   {
     question: 'How do I contact customer support?',
-    answer: `Our support team is available 24/7 via live chat in the app, email at ${supportEmail.value}, or by calling our helpline. Average response time is under 2 minutes for chat and under 4 hours for email.`
+    answer: `Our support team is available 24/7 via live chat in the app, email at ${settings.value.supportEmail}, or by calling our helpline. Average response time is under 2 minutes for chat and under 4 hours for email.`
   }
 ])
 </script>
