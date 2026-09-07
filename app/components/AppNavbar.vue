@@ -38,31 +38,42 @@
         </button>
       </div>
 
-      <!-- Mobile Overlay -->
-      <div class="mobile-menu-overlay" :class="{ open: isMobileMenuOpen }">
-        <div class="mobile-menu-content">
-          <ul class="mobile-nav-links">
-            <li v-for="link in navLinks" :key="link.label">
-              <a v-if="link.hash" href="#" @click.prevent="scrollToSection(link.hash); closeMobileMenu()">
-                {{ link.label }}
-              </a>
-              <NuxtLink v-else :to="link.path" @click="closeMobileMenu">
-                {{ link.label }}
-              </NuxtLink>
-            </li>
-          </ul>
-          <div class="mobile-nav-actions">
-            <NuxtLink to="/login" class="mobile-btn navbar-login-btn" @click="closeMobileMenu">Log In</NuxtLink>
-            <NuxtLink to="/register" class="mobile-btn btn-primary" @click="closeMobileMenu">Open an Account</NuxtLink>
-          </div>
-        </div>
-      </div>
-
     </div>
   </nav>
+
+  <!-- Mobile Overlay via Teleport to body so it escapes navbar backdrop-filter and containing block -->
+  <Teleport to="body">
+    <div
+      v-if="isMobileMenuOpen"
+      class="mobile-backdrop"
+      @click="closeMobileMenu"
+    />
+    <div class="mobile-menu-overlay" :class="{ open: isMobileMenuOpen }">
+      <div class="mobile-menu-content">
+        <ul class="mobile-nav-links">
+          <li v-for="link in navLinks" :key="link.label">
+            <a v-if="link.hash" href="#" class="mobile-nav-link" @click.prevent="scrollToSection(link.hash); closeMobileMenu()">
+              <span>{{ link.label }}</span>
+              <Icon name="lucide:chevron-right" :size="16" class="mobile-arrow" />
+            </a>
+            <NuxtLink v-else :to="link.path" class="mobile-nav-link" @click="closeMobileMenu">
+              <span>{{ link.label }}</span>
+              <Icon name="lucide:chevron-right" :size="16" class="mobile-arrow" />
+            </NuxtLink>
+          </li>
+        </ul>
+        <div class="mobile-nav-actions">
+          <NuxtLink to="/login" class="mobile-btn navbar-login-btn" @click="closeMobileMenu">Log In</NuxtLink>
+          <NuxtLink to="/register" class="mobile-btn btn-primary" @click="closeMobileMenu">Open an Account</NuxtLink>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch, onUnmounted } from 'vue'
+
 const { y: scrollY } = useWindowScroll()
 const scrolled = computed(() => scrollY.value > 100)
 const isMobileMenuOpen = ref(false)
@@ -82,6 +93,27 @@ const navLinks = [
 
 const router = useRouter()
 const route = useRoute()
+
+// Auto-close menu when navigating to a new route
+watch(() => route.fullPath, () => {
+  closeMobileMenu()
+})
+
+// Lock background scroll when mobile menu is open
+watch(isMobileMenuOpen, (open) => {
+  if (!import.meta.client) return
+  if (open) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    document.body.style.overflow = ''
+  }
+})
 
 const scrollToSection = (hash: string) => {
   closeMobileMenu()
@@ -254,50 +286,126 @@ const scrollToSection = (hash: string) => {
 }
 .mobile-menu-btn:hover { background: var(--lhbg); }
 
-/* ── Mobile overlay ── */
-.mobile-menu-overlay {
-  display: none;
+/* ── Mobile Backdrop ── */
+.mobile-backdrop {
   position: fixed;
-  top: 68px; left: 0; right: 0; bottom: 0;
-  background: var(--mob);
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow-y: auto;
-  z-index: 999;
+  inset: 0;
+  background: rgba(10, 25, 47, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: fadeIn 0.2s ease-out forwards;
 }
-.mobile-menu-overlay.open { transform: translateX(0); }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Mobile Drawer Overlay ── */
+.mobile-menu-overlay {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 96px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(100vh - 96px);
+  background: #ffffff;
+  transform: translateY(-10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  overflow-y: auto;
+  z-index: 9999;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+}
+
+.mobile-menu-overlay.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dark .mobile-menu-overlay {
+  background: #0b1528;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
 
 .mobile-menu-content {
   padding: 20px 18px 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
 }
+
 .mobile-nav-links {
-  list-style: none; margin: 0; padding: 0;
-  display: flex; flex-direction: column; gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.mobile-nav-links li a {
-  display: block;
-  padding: 12px 14px;
-  font-size: 16px;
-  font-weight: 500;
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  font-size: 15.5px;
+  font-weight: 550;
   color: var(--lc);
-  border-radius: 9px;
+  border-radius: 10px;
   text-decoration: none;
-  transition: color 0.16s, background 0.16s;
+  background: #f8fafc;
+  transition: all 0.16s ease;
 }
-.mobile-nav-links li a:hover {
+
+.mobile-nav-link:hover,
+.mobile-nav-link:active {
   color: var(--lh);
   background: var(--lhbg);
 }
+
+.mobile-arrow {
+  color: #94a3b8;
+  transition: transform 0.16s ease;
+}
+
+.mobile-nav-link:hover .mobile-arrow {
+  transform: translateX(3px);
+  color: var(--lh);
+}
+
+.dark .mobile-nav-link {
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+}
+
+.dark .mobile-nav-link:hover,
+.dark .mobile-nav-link:active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #60a5fa;
+}
+
 .mobile-nav-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding-top: 16px;
-  border-top: 1px solid rgba(0,0,0,0.07);
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
 }
+
+.dark .mobile-nav-actions {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
 .mobile-btn {
   display: flex;
   align-items: center;
@@ -312,12 +420,17 @@ const scrollToSection = (hash: string) => {
   font-family: inherit;
   cursor: pointer;
 }
+
 .mobile-btn.btn-primary {
   background: linear-gradient(135deg, #0055e0, #0033aa);
   color: #fff;
   border: none;
+  box-shadow: 0 4px 12px rgba(0, 85, 224, 0.25);
 }
-.mobile-btn.btn-primary:hover { opacity: 0.9; }
+
+.mobile-btn.btn-primary:hover {
+  opacity: 0.92;
+}
 
 /* ── Responsive ── */
 .desktop-only { display: flex; }
@@ -329,22 +442,22 @@ const scrollToSection = (hash: string) => {
   .navbar-register-btn { font-size: 13px; padding: 6px 13px; }
   .logo-img { height: 152px; }
   .navbar-container { padding: 0 18px; height: 88px; }
+  .mobile-menu-overlay { top: 88px; height: calc(100vh - 88px); }
 }
 
 /* 900px: go mobile */
 @media (max-width: 900px) {
   .desktop-only { display: none !important; }
   .mobile-right { display: flex; }
-  .mobile-menu-overlay { display: block; }
   .navbar-container { padding: 0 14px; height: 80px; }
   .logo-img { height: 140px; }
-  .mobile-menu-overlay { top: 80px; }
+  .mobile-menu-overlay { top: 80px; height: calc(100vh - 80px); }
 }
 
 /* 480px */
 @media (max-width: 480px) {
   .logo-img { height: 116px; }
   .navbar-container { height: 72px; }
-  .mobile-menu-overlay { top: 72px; }
+  .mobile-menu-overlay { top: 72px; height: calc(100vh - 72px); }
 }
 </style>

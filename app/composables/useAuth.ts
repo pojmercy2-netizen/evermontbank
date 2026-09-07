@@ -346,8 +346,8 @@ export const useAuth = () => {
         email: emailVal,
         password: passwordVal,
         full_name: fullNameVal,
-        // username omitted — backend auto-generates a unique one from email prefix + random suffix
-        phone: phoneVal || undefined
+        account_type: accountTypeVal || 'checking',
+        phone: phoneVal ? phoneVal.trim() : undefined
       })
 
       if (!regResponse.success) {

@@ -59,14 +59,26 @@ export function withErrorHandler<T>(handler: (event: H3Event) => Promise<T>): Ev
       }
 
       // PostgreSQL / Drizzle errors — map common codes to proper HTTP statuses
-      if (err && typeof err === 'object' && 'code' in err) {
-        const pgErr = err as { code: string; detail?: string; message?: string }
+      const pgErr = (err && typeof err === 'object')
+        ? ((err as any).code ? (err as any) : ((err as any).cause?.code ? (err as any).cause : ((err as any).originalError?.code ? (err as any).originalError : null)))
+        : null
+
+      if (pgErr && pgErr.code) {
         if (pgErr.code === '23505') {
-          // Unique constraint violation
+          // Unique constraint violation (duplicate email, username, etc.)
+          const detail = pgErr.detail || ''
+          let message = 'A record with this information already exists.'
+          if (detail.includes('email')) {
+            message = 'This email address is already registered. Please log in or use a different email.'
+          } else if (detail.includes('username')) {
+            message = 'This username is already taken. Please choose another username.'
+          } else if (detail.includes('account_number')) {
+            message = 'Account number collision occurred. Please try submitting again.'
+          }
           setResponseStatus(event, 409)
           return {
             success: false,
-            error: { code: 'CONFLICT', message: 'A record with this information already exists.' }
+            error: { code: 'CONFLICT', message }
           }
         }
         if (pgErr.code === '23503') {
@@ -77,13 +89,21 @@ export function withErrorHandler<T>(handler: (event: H3Event) => Promise<T>): Ev
             error: { code: 'CONFLICT', message: 'Referenced resource does not exist.' }
           }
         }
-        if (pgErr.code === 'ECONNREFUSED' || pgErr.code === 'ETIMEDOUT' || pgErr.code === '08006' || pgErr.code === '08001') {
-          // Database connection error
+        if (pgErr.code === '22001') {
+          // String length exceeded
+          setResponseStatus(event, 400)
+          return {
+            success: false,
+            error: { code: 'BAD_REQUEST', message: 'One or more fields exceed maximum allowed character length.' }
+          }
+        }
+        if (pgErr.code === 'ECONNREFUSED' || pgErr.code === 'ETIMEDOUT' || pgErr.code === '08006' || pgErr.code === '08001' || pgErr.code === '57P01' || pgErr.code === '57P02' || pgErr.code === '57P03') {
+          // Database connection error / Neon cold start
           console.error('[Evermont DB Connection Error]', err)
           setResponseStatus(event, 503)
           return {
             success: false,
-            error: { code: 'SERVICE_UNAVAILABLE', message: 'Database is temporarily unavailable. Please try again.' }
+            error: { code: 'SERVICE_UNAVAILABLE', message: 'Database is temporarily waking up or reconnecting. Please try again in a few seconds.' }
           }
         }
       }

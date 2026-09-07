@@ -13,7 +13,8 @@ const registerSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   full_name: z.string().min(2, 'Name is too short'),
   username: z.string().min(3, 'Username must be at least 3 characters').optional(),
-  phone: z.string().min(10).max(15).optional()
+  phone: z.string().max(30).optional().nullable(),
+  account_type: z.enum(['checking', 'savings', 'business']).optional().default('checking')
 })
 
 export default withErrorHandler(async (event) => {
@@ -23,30 +24,34 @@ export default withErrorHandler(async (event) => {
   const db = useDb()
 
   // Check if email or username is already taken
-  const checkQuery = [eq(users.email, validated.email)]
+  const checkQuery = [eq(users.email, validated.email.toLowerCase().trim())]
   if (validated.username) {
-    checkQuery.push(eq(users.username, validated.username))
+    checkQuery.push(eq(users.username, validated.username.trim()))
   }
   const existingUsers = await db.select().from(users).where(or(...checkQuery)).limit(1)
 
   if (existingUsers.length > 0) {
-    throw conflict('Email or username is already registered')
+    throw conflict('This email address or username is already registered. Please log in instead.')
   }
 
   // Hash password
   const passwordHash = await hashPassword(validated.password)
 
-  // Generate a random username if not provided
-  const baseUsername = validated.username || validated.email.split('@')[0]
-  const finalUsername = validated.username || `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`
+  // Generate a clean safe unique username if not provided
+  const rawBase = (validated.username || validated.email.split('@')[0] || 'user').trim()
+  const cleanBase = rawBase.replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 30)
+  const finalUsername = validated.username || `${cleanBase}_${Date.now().toString().slice(-4)}${Math.floor(100 + Math.random() * 900)}`
+
+  // Clean phone
+  const cleanPhone = validated.phone ? validated.phone.trim() : null
 
   // Insert user inside transaction
   const result = await db.transaction(async (tx) => {
     const [newUser] = await tx.insert(users).values({
-      email: validated.email,
-      fullName: validated.full_name,
+      email: validated.email.toLowerCase().trim(),
+      fullName: validated.full_name.trim(),
       username: finalUsername,
-      phone: validated.phone || null,
+      phone: cleanPhone,
       passwordHash,
       role: 'user',
       status: 'active',
@@ -66,12 +71,12 @@ export default withErrorHandler(async (event) => {
       throw new Error('Failed to create user record')
     }
 
-    // Create an initial checking account
+    // Create an initial account based on selected account type
     const randAcct = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join('')
     await tx.insert(accounts).values({
       userId: newUser.id,
       accountNumber: randAcct,
-      accountType: 'checking',
+      accountType: validated.account_type || 'checking',
       balance: '0.00',
       currency: 'USD'
     })
