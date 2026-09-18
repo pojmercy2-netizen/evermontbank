@@ -22,7 +22,15 @@
 
         <!-- STEP 2: CRYPTO DEPOSIT -->
         <div v-else-if="isCryptoStep2" class="crypto-step2-state">
-          <form @submit.prevent="handleCryptoSubmit" class="dashboard-form">
+          <div v-if="loadingSettings" style="text-align:center;padding:24px;color:#94a3b8;">
+            <Icon name="lucide:loader-2" class="w-6 h-6 animate-spin" style="margin:0 auto 8px;display:block;" />
+            <span>Loading wallet addresses...</span>
+          </div>
+          <div v-else-if="coins.length === 0" style="text-align:center;padding:24px;color:#94a3b8;">
+            <p style="font-size:14px;margin-bottom:12px;">No crypto deposit addresses configured. Please contact support.</p>
+            <button class="btn btn-outline" @click="isCryptoStep2 = false">Go Back</button>
+          </div>
+          <form v-else @submit.prevent="handleCryptoSubmit" class="dashboard-form">
             <div class="form-group">
               <label class="form-label text-left block mb-1" for="selectedCoin">Select Cryptocurrency</label>
               <select id="selectedCoin" v-model="selectedCoin" class="form-input form-select" required>
@@ -304,29 +312,27 @@ const isCryptoStep2 = ref(false)
 const isBankStep2 = ref(false)
 const isPayPalStep2 = ref(false)
 const submitting = ref(false)
+const loadingSettings = ref(true)
 
-const selectedCoin = ref('BTC')
+const selectedCoin = ref('')
 const receiptFileName = ref('')
 const cryptoAmount = ref<number | ''>('')
 const bankAmount = ref<number | ''>('')
 const paypalAmount = ref<number | ''>('')
 
-const coins = ref([
-  { id: 'BTC', name: 'Bitcoin (BTC)', address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', network: 'Bitcoin' },
-  { id: 'ETH', name: 'Ethereum (ETH)', address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F', network: 'ERC20 (Ethereum)' },
-  { id: 'USDT', name: 'Tether (USDT)', address: 'TR7NHqju6dC8GyqKz2763z54X5157mock', network: 'TRC20 (Tron)' }
-])
+// Start empty — always populated from admin-configured deposit_settings.json via API
+const coins = ref<{ id: string; name: string; address: string; network: string }[]>([])
 
 const bankDetails = ref<any>({
   enabled: true,
-  bankName: 'Evermont National Bank',
-  accountName: 'Evermont Financial Clearing Corp',
-  accountNumber: '4892019482',
-  routingNumber: '021000021',
-  swiftCode: 'EVBKUS33XXX',
-  bankAddress: '100 Wall Street, New York, NY 10005, USA',
-  instructions: 'Please include your Account Number and Reference Code in the wire description.',
-  minAmount: 50
+  bankName: '',
+  accountName: '',
+  accountNumber: '',
+  routingNumber: '',
+  swiftCode: '',
+  bankAddress: '',
+  instructions: '',
+  minAmount: 0
 })
 
 const paypalDetails = ref<any>({
@@ -363,37 +369,46 @@ const resetForm = () => {
 }
 
 const loadDepositSettings = async () => {
+  loadingSettings.value = true
   try {
     const res = await auth.apiCall<any>('/dashboard/wallets', 'GET')
     if (res.success && res.data) {
-      const data = res.data?.data ?? res.data
+      // apiCall wraps server response: res.data = { success, data: { wallets, bankTransfer, ... } }
+      const payload = res.data?.data ?? res.data
 
-      // Load Crypto wallets
-      const walletsList = Array.isArray(data.wallets) ? data.wallets : Array.isArray(data) ? data : []
-      if (walletsList.length > 0) {
-        coins.value = walletsList.map((w: any) => ({
-          id: w.coin,
-          name: w.label || `${w.coin}`,
-          address: w.address,
-          network: w.network || 'Mainnet'
-        }))
-        if (!coins.value.some(c => c.id === selectedCoin.value) && coins.value[0]) {
-          selectedCoin.value = coins.value[0].id
-        }
+      // Load Crypto wallets — always overwrite with live admin data
+      const walletsList = Array.isArray(payload?.wallets) ? payload.wallets
+        : Array.isArray(payload) ? payload
+        : []
+
+      coins.value = walletsList.map((w: any) => ({
+        id: w.coin,
+        name: w.label || w.coin,
+        address: w.address,
+        network: w.network || 'Mainnet'
+      }))
+
+      // Auto-select first available coin
+      if (coins.value.length > 0 && !coins.value.some(c => c.id === selectedCoin.value)) {
+        selectedCoin.value = coins.value[0]!.id
       }
 
       // Load Bank Transfer details
-      if (data.bankTransfer) {
-        bankDetails.value = data.bankTransfer
+      if (payload?.bankTransfer) {
+        bankDetails.value = payload.bankTransfer
       }
 
       // Load PayPal / other details
-      if (data.otherMethods?.paypal) {
-        paypalDetails.value = data.otherMethods.paypal
+      if (payload?.otherMethods?.paypal) {
+        paypalDetails.value = payload.otherMethods.paypal
       }
+    } else {
+      console.warn('[Deposits] Failed to load deposit settings:', res.error)
     }
-  } catch {
-    // Fallback to default
+  } catch (err: any) {
+    console.error('[Deposits] Error loading deposit settings:', err.message)
+  } finally {
+    loadingSettings.value = false
   }
 }
 

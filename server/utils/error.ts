@@ -97,6 +97,14 @@ export function withErrorHandler<T>(handler: (event: H3Event) => Promise<T>): Ev
             error: { code: 'BAD_REQUEST', message: 'One or more fields exceed maximum allowed character length.' }
           }
         }
+        if (pgErr.code === '22P02') {
+          // Invalid input syntax for type uuid — usually a corrupt/mock token with a non-UUID user ID
+          setResponseStatus(event, 401)
+          return {
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Invalid session. Please log in again.' }
+          }
+        }
         if (pgErr.code === 'ECONNREFUSED' || pgErr.code === 'ETIMEDOUT' || pgErr.code === '08006' || pgErr.code === '08001' || pgErr.code === '57P01' || pgErr.code === '57P02' || pgErr.code === '57P03') {
           // Database connection error / Neon cold start
           console.error('[Evermont DB Connection Error]', err)

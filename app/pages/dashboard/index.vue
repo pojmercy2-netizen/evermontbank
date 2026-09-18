@@ -8,15 +8,18 @@
       </div>
     </div>
 
-    <!-- Hero Layout Grid (Balance Card & Send Money Grid) -->
+    <!-- Hero Layout Grid (Balance Card + Send Money side by side on large screens) -->
     <div class="hero-layout-grid">
-      <DashboardBalanceCard
-        name="TOTAL BALANCE"
-        :balance="totalBalance"
-        subtitle="+12.5% this month"
-        type="premium"
-        :showKyc="true"
-      />
+      <div class="balance-card-col">
+        <DashboardBalanceCard
+          name="TOTAL BALANCE"
+          :balance="totalBalance"
+          :accountNumber="accountNumber"
+          subtitle="+12.5% this month"
+          type="premium"
+          :showKyc="true"
+        />
+      </div>
 
       <div class="send-money-container-custom">
         <h3 class="send-money-header">SEND MONEY</h3>
@@ -28,7 +31,7 @@
             class="send-money-card-custom"
           >
             <div :class="['send-money-icon-box-custom', method.bgClass]">
-              <Icon :name="method.icon" class="w-6 h-6" :class="method.color" />
+              <Icon :name="method.icon" class="w-5 h-5" :class="method.color" />
             </div>
             <span class="send-money-title-custom">{{ method.id }}</span>
             <span class="send-money-desc-custom">{{ method.desc }}</span>
@@ -117,6 +120,7 @@ useHead({
 const checkingBalance = ref(0)
 const allAccountsBalance = ref(0) // sum of all real accounts
 const transactions = ref<any[]>([])
+const accountNumber = ref('')
 
 const showPhysicalModal = ref(false)
 const physicalCardLoading = ref(false)
@@ -165,6 +169,12 @@ const loadAccountData = async () => {
       // Checking account balance (first checking account)
       const checking = accounts.find((a: any) => a.accountType === 'checking')
       checkingBalance.value = checking ? parseFloat(checking.balance || 0) : 0
+      // Store account number for display
+      if (checking?.accountNumber) {
+        accountNumber.value = checking.accountNumber
+      } else if (accounts.length > 0 && accounts[0].accountNumber) {
+        accountNumber.value = accounts[0].accountNumber
+      }
     } else {
       allAccountsBalance.value = 0
       checkingBalance.value = 0
@@ -217,85 +227,135 @@ const handlePhysicalCardSubmit = (formData: any) => {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
-/* Welcome header */
+/* ── Welcome Header ── */
 .welcome-header-row {
   display: flex;
   align-items: center;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 .welcome-section-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 .welcome-section-body h1 {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 800;
   color: #0A192F;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
-.dark .welcome-section-body h1 {
-  color: #ffffff;
-}
+.dark .welcome-section-body h1 { color: #ffffff; }
 .welcome-section-body p {
-  font-size: 16px;
+  font-size: 14px;
   color: #64748b;
 }
-.dark .welcome-section-body p {
-  color: #94a3b8;
-}
+.dark .welcome-section-body p { color: #94a3b8; }
 
-/* Hero layout grid */
+/* ── Hero grid: side-by-side on large screens ── */
 .hero-layout-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
   align-items: start;
 }
 
-.send-money-container-custom {
-  display: none;
+.balance-card-col {
+  min-width: 0;
 }
 
-@media (max-width: 1024px) {
-  .send-money-container-custom {
-    display: flex;
-    flex-direction: column;
-  }
+.send-money-container-custom {
+  display: flex;
+  flex-direction: column;
 }
+
 .send-money-header {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: #8292a6;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   text-transform: uppercase;
 }
 
 .send-money-grid-custom {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-@media (max-width: 1200px) {
-  .send-money-grid-custom {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 640px) {
-  .send-money-grid-custom {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
 
+/* ── Card types section ── */
+.card-types-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* ── Main transactions grid ── */
+.dashboard-grid-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.dashboard-column-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dashboard-card {
+  background: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border);
+  padding: 20px;
+}
+.dark .dashboard-card {
+  background: var(--color-background-dark-card);
+  border-color: var(--color-border-dark);
+}
+
+.card-header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.card-header-main h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.dark .card-header-main h3 { color: var(--color-text-light); }
+
+.view-all {
+  font-size: 13px;
+  color: var(--color-secondary);
+  font-weight: 500;
+  text-decoration: none;
+}
+.view-all:hover { text-decoration: underline; }
+
+.transaction-list {
+  display: flex;
+  flex-direction: column;
+}
+.empty-text {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 16px;
+  font-size: 14px;
+}
+
+/* ── Send money card ── */
 .send-money-card-custom {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  padding: 10px 10px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -312,110 +372,91 @@ const handlePhysicalCardSubmit = (formData: any) => {
 .send-money-card-custom:hover {
   transform: translateY(-2px);
   border-color: rgba(0, 102, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .send-money-icon-box-custom {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .send-money-title-custom {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--color-text-main);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
+  line-height: 1.2;
 }
-.dark .send-money-title-custom {
-  color: #ffffff;
-}
+.dark .send-money-title-custom { color: #ffffff; }
 .send-money-desc-custom {
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--color-text-muted);
   line-height: 1.3;
 }
-.dark .send-money-desc-custom {
-  color: #94a3b8;
+.dark .send-money-desc-custom { color: #94a3b8; }
+
+/* ════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ════════════════════════════════ */
+
+/* Large screens: 4-col send-money grid */
+@media (min-width: 1200px) {
+  .send-money-grid-custom { grid-template-columns: repeat(4, 1fr); }
 }
 
-.card-types-section {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+/* Medium-large: compact but still side by side */
+@media (max-width: 1199px) and (min-width: 900px) {
+  .hero-layout-grid { grid-template-columns: 340px 1fr; }
+  .send-money-grid-custom { grid-template-columns: repeat(4, 1fr); }
 }
-@media (max-width: 768px) {
-  .card-types-section {
+
+/* Tablet: stack hero vertically */
+@media (max-width: 899px) {
+  .hero-layout-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  .welcome-section-body h1 {
-    font-size: 24px;
-  }
-  .welcome-section-body p {
-    font-size: 14px;
-  }
+  .send-money-grid-custom { grid-template-columns: repeat(4, 1fr); }
+  .card-types-section { gap: 14px; }
+  .dashboard-overview { gap: 16px; }
 }
 
-.dashboard-grid-container {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+/* Small tablet / large phone */
+@media (max-width: 640px) {
+  .dashboard-overview { gap: 14px; }
+
+  .welcome-section-body h1 { font-size: 20px; }
+  .welcome-section-body p { font-size: 13px; }
+
+  .send-money-grid-custom { grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .send-money-card-custom { padding: 8px 6px; }
+  .send-money-icon-box-custom { width: 28px; height: 28px; border-radius: 7px; margin-bottom: 6px; }
+  .send-money-title-custom { font-size: 9.5px; }
+  .send-money-desc-custom { display: none; }
+
+  .card-types-section { grid-template-columns: 1fr; gap: 12px; }
+  .dashboard-card { padding: 16px; }
+  .card-header-main h3 { font-size: 15px; }
 }
 
-.dashboard-column-left {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+/* Phone */
+@media (max-width: 480px) {
+  .dashboard-overview { gap: 12px; }
+  .welcome-section-body h1 { font-size: 18px; }
+  .send-money-grid-custom { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .send-money-card-custom { padding: 7px 5px; border-radius: 10px; }
+  .send-money-icon-box-custom { width: 26px; height: 26px; border-radius: 6px; margin-bottom: 5px; }
+  .send-money-title-custom { font-size: 8.5px; }
 }
 
-.dashboard-card {
-  background: var(--color-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid var(--color-border);
-  padding: 24px;
-}
-.dark .dashboard-card {
-  background: var(--color-background-dark-card);
-  border-color: var(--color-border-dark);
-}
-
-.card-header-main {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.card-header-main h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-.dark .card-header-main h3 {
-  color: var(--color-text-light);
-}
-
-.view-all {
-  font-size: 14px;
-  color: var(--color-secondary);
-  font-weight: 500;
-  text-decoration: none;
-}
-.view-all:hover {
-  text-decoration: underline;
-}
-
-.transaction-list {
-  display: flex;
-  flex-direction: column;
-}
-.empty-text {
-  color: var(--color-text-muted);
-  text-align: center;
-  padding: 16px;
+/* Very small phone */
+@media (max-width: 360px) {
+  .send-money-grid-custom { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .send-money-card-custom { padding: 6px 4px; }
+  .send-money-title-custom { font-size: 8px; }
 }
 </style>

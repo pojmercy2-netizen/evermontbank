@@ -32,11 +32,23 @@ export const useAuth = () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Safe client side initialization and synchronisation fallback
+  // Safe client-side initialization — clear any stale mock tokens that would
+  // break real API calls (mock tokens like 'mock_token_xxx' are not valid JWTs)
   onMounted(() => {
     const savedToken = localStorage.getItem('authToken')
     const savedUser = localStorage.getItem('user')
     const savedUserId = localStorage.getItem('userId')
+
+    // If a mock/invalid token is stored, clear it so the user is sent to login
+    if (savedToken && savedToken.startsWith('mock_token_')) {
+      console.warn('[useAuth] Clearing stale mock token — redirecting to login')
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('user')
+      localStorage.removeItem('userId')
+      token.value = null
+      user.value = null
+      return
+    }
 
     if (savedToken && savedUser) {
       token.value = savedToken
@@ -44,7 +56,7 @@ export const useAuth = () => {
         user.value = JSON.parse(savedUser)
       } catch (e) {
         user.value = {
-          id: savedUserId || '1001',
+          id: savedUserId || '',
           email: '',
           fullName: 'User',
           accountType: 'checking'
@@ -75,7 +87,9 @@ export const useAuth = () => {
   const isTokenExpired = (): boolean => {
     if (!import.meta.client) return false  // can't check localStorage on server
     const t = token.value || localStorage.getItem('authToken')
-    if (!t || t.startsWith('mock_token_')) return false  // mock tokens never expire
+    if (!t) return true
+    // Mock tokens are always considered expired — they are never valid for real API calls
+    if (t.startsWith('mock_token_')) return true
     const payload = decodeJwtPayload(t)
     if (!payload || !payload.exp) return true
     const nowSec = Math.floor(Date.now() / 1000)
@@ -221,33 +235,9 @@ export const useAuth = () => {
       const isHealthy = await healthCheck()
 
       if (!isHealthy) {
-        console.warn('Backend server not running. Using mock login fallback.')
-        const isDefaultAdmin = emailVal.toLowerCase().includes('admin')
-        const mockUser: User = {
-          id: '1001',
-          email: emailVal,
-          fullName: (emailVal.split('@')[0] || '').toUpperCase(),
-          accountType: 'Checking',
-          status: 'Active',
-          isAdmin: isDefaultAdmin
-        }
-
-        token.value = 'mock_token_' + Date.now()
-        user.value = mockUser
-
-        localStorage.setItem('authToken', token.value)
-        localStorage.setItem('userId', mockUser.id)
-        localStorage.setItem('user', JSON.stringify(mockUser))
-
-        setTimeout(() => {
-          isLoading.value = false
-          if (isDefaultAdmin) {
-            navigateTo('/admin')
-          } else {
-            navigateTo('/dashboard')
-          }
-        }, 800)
-        return true
+        error.value = 'Unable to connect to the server. Please check your internet connection and try again.'
+        isLoading.value = false
+        return false
       }
 
       const response = await apiCall<any>('/auth/login', 'POST', {

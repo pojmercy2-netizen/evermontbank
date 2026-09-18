@@ -456,12 +456,12 @@ button {
 .premium-balance-card {
   position: relative;
   background: linear-gradient(135deg, #091326 0%, #15223e 100%) !important;
-  border-radius: 24px !important;
-  padding: 32px 28px !important;
+  border-radius: 20px !important;
+  padding: 22px 20px !important;
   color: #ffffff !important;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(9, 19, 38, 0.15) !important;
-  border: 1px solid rgba(255, 255, 255, 0.03) !important;
+  box-shadow: 0 8px 20px rgba(9, 19, 38, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
 }
 
 .balance-card-diagonal {
@@ -472,7 +472,7 @@ button {
   height: 140%;
   background: linear-gradient(to top right, transparent 49.6%, #10b981 49.8%, #10b981 50.2%, transparent 50.4%);
   pointer-events: none;
-  opacity: 0.75;
+  opacity: 0.65;
 }
 
 .premium-card-header {
@@ -486,7 +486,9 @@ button {
 .premium-card-left {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
 }
 
 .premium-card-right {
@@ -494,24 +496,25 @@ button {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .premium-label-muted {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   color: #647893;
 }
 
 .premium-balance-display {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 6px;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .premium-balance-val {
-  font-size: 38px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1.1;
@@ -524,18 +527,99 @@ button {
   align-items: center;
   justify-content: center;
   transition: color 0.2s;
+  flex-shrink: 0;
 }
-
-.premium-toggle-btn:hover {
-  color: #ffffff;
-}
+.premium-toggle-btn:hover { color: #ffffff; }
 
 .premium-change-text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #10b981;
-  margin-top: 14px;
+  margin-top: 8px;
 }
+
+/* Account number row inside premium balance card */
+.premium-acct-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 11px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.premium-acct-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #647893;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.premium-acct-value {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: #e2e8f0;
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+}
+
+.premium-copy-btn {
+  background: none;
+  border: none;
+  padding: 2px 3px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, transform 0.15s;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.premium-copy-btn:hover {
+  color: #10b981;
+  transform: scale(1.1);
+}
+
+/* ── Tablet ── */
+@media (max-width: 768px) {
+  .premium-balance-card {
+    padding: 18px 16px !important;
+    border-radius: 16px !important;
+  }
+  .premium-balance-val { font-size: 24px; }
+  .premium-acct-value { font-size: 12px; }
+  .premium-acct-row { padding: 7px 10px; gap: 7px; }
+}
+
+/* ── Phone ── */
+@media (max-width: 480px) {
+  .premium-balance-card {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+  }
+  .premium-balance-val { font-size: 22px; }
+  .premium-change-text { font-size: 11px; margin-top: 6px; }
+  .premium-acct-row { margin-top: 10px; padding: 6px 9px; gap: 6px; }
+  .premium-acct-value { font-size: 11px; letter-spacing: 0.05em; }
+  .premium-acct-label { font-size: 8px; }
+  .kyc-pill { padding: 4px 10px; font-size: 10px; }
+}
+
+/* ── Small phone ── */
+@media (max-width: 360px) {
+  .premium-balance-val { font-size: 20px; }
+  .premium-acct-value { font-size: 10px; letter-spacing: 0.03em; }
+  .premium-balance-card { padding: 14px 12px !important; }
+}
+
 
 .kyc-pill {
   padding: 6px 18px;

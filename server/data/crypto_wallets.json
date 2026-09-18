@@ -3,14 +3,14 @@
     "coin": "BTC",
     "label": "Bitcoin (BTC)",
     "network": "Bitcoin",
-    "address": "lklsjknfdmaldklfsknkdmlcel;f,md..e/cf,m.",
+    "address": "bc1q_NEW_TEST_ADDR_123456789",
     "active": true
   },
   {
     "coin": "ETH",
     "label": "Ethereum (ETH)",
     "network": "ERC20 (Ethereum)",
-    "address": "pelkwjkjeklq32iuop4iuri2io4opid",
+    "address": "0xNEW_ETH_ADDR_TEST_123",
     "active": true
   },
   {

@@ -647,20 +647,25 @@ const loadSettings = async () => {
   try {
     const res = await auth.apiCall<any>('/admin/wallets', 'GET')
     if (res.success && res.data) {
-      const data = res.data?.data ?? res.data
-      if (Array.isArray(data)) {
-        wallets.value = data
-      } else if (data && typeof data === 'object') {
-        wallets.value = Array.isArray(data.wallets) ? data.wallets : []
-        if (data.bankTransfer) {
-          Object.assign(bankForm, data.bankTransfer)
+      // apiCall wraps: res.data = { success, data: { wallets, bankTransfer, otherMethods, data } }
+      const payload = res.data?.data ?? res.data
+
+      if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+        wallets.value = Array.isArray(payload.wallets) ? payload.wallets : []
+        if (payload.bankTransfer) {
+          Object.assign(bankForm, payload.bankTransfer)
         }
-        if (data.otherMethods) {
-          if (data.otherMethods.paypal) Object.assign(otherForm.paypal, data.otherMethods.paypal)
-          if (data.otherMethods.cashapp) Object.assign(otherForm.cashapp, data.otherMethods.cashapp)
-          if (data.otherMethods.zelle) Object.assign(otherForm.zelle, data.otherMethods.zelle)
+        if (payload.otherMethods) {
+          if (payload.otherMethods.paypal) Object.assign(otherForm.paypal, payload.otherMethods.paypal)
+          if (payload.otherMethods.cashapp) Object.assign(otherForm.cashapp, payload.otherMethods.cashapp)
+          if (payload.otherMethods.zelle) Object.assign(otherForm.zelle, payload.otherMethods.zelle)
         }
+      } else if (Array.isArray(payload)) {
+        wallets.value = payload
       }
+    } else if (res.error === 'Session expired. Please log in again.') {
+      // Redirect to login on expired session
+      navigateTo('/admin/login')
     } else {
       showAlert('error', res.error || 'Failed to load deposit settings.')
     }

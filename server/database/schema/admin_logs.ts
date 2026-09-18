@@ -6,7 +6,7 @@ export const adminLogs = pgTable('admin_logs', {
   adminId: uuid('admin_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   action: varchar('action', { length: 100 }).notNull(),
   targetType: varchar('target_type', { length: 50 }),
-  targetId: uuid('target_id'),
+  targetId: varchar('target_id', { length: 100 }),
   details: jsonb('details'),
   ipAddress: varchar('ip_address', { length: 50 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()

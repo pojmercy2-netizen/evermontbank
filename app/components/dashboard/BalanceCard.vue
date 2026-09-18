@@ -17,10 +17,24 @@
             @click="toggleBalance" 
             :aria-label="isBalanceVisible ? 'Hide balance' : 'Show balance'"
           >
-            <Icon :name="isBalanceVisible ? 'lucide:eye' : 'lucide:eye-off'" class="w-5 h-5" />
+            <Icon :name="isBalanceVisible ? 'lucide:eye' : 'lucide:eye-off'" class="w-4 h-4" />
           </button>
         </div>
         <div class="premium-change-text">{{ subtitle }}</div>
+
+        <!-- Account Number Row -->
+        <div v-if="accountNumber" class="premium-acct-row">
+          <span class="premium-acct-label">ACCOUNT NO.</span>
+          <span class="premium-acct-value">{{ isBalanceVisible ? formatAccountNumber(accountNumber) : '•••• •••• ••' }}</span>
+          <button
+            type="button"
+            class="premium-copy-btn"
+            :aria-label="copyDone ? 'Copied!' : 'Copy account number'"
+            @click="copyAccountNumber"
+          >
+            <Icon :name="copyDone ? 'lucide:check' : 'lucide:copy'" class="w-3 h-3" />
+          </button>
+        </div>
       </div>
 
       <div class="premium-card-right" v-if="showKyc">
@@ -59,6 +73,7 @@ const props = withDefaults(defineProps<{
 
 const isBalanceVisible = ref(true)
 const kycStatus = ref('Unverified')
+const copyDone = ref(false)
 
 const toggleBalance = () => {
   isBalanceVisible.value = !isBalanceVisible.value
@@ -66,6 +81,23 @@ const toggleBalance = () => {
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val)
+}
+
+// Format account number with spaces every 4 digits: 1234 5678 90
+const formatAccountNumber = (num: string) => {
+  if (!num) return ''
+  return num.replace(/(\d{4})(\d{4})(\d{2,})/, '$1 $2 $3')
+}
+
+const copyAccountNumber = async () => {
+  if (!props.accountNumber) return
+  try {
+    await navigator.clipboard.writeText(props.accountNumber)
+    copyDone.value = true
+    setTimeout(() => { copyDone.value = false }, 2000)
+  } catch {
+    // fallback
+  }
 }
 
 const auth = useAuth()
@@ -115,99 +147,74 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* ── Base card ── */
 .balance-card {
   background: var(--color-surface);
-  padding: 32px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  padding: 22px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--color-border);
   position: relative;
   overflow: hidden;
 }
-
 .dark .balance-card {
   background: var(--color-background-dark-card);
   border-color: var(--color-border-dark);
 }
-
 .balance-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 100%;
   height: 4px;
   background-color: var(--color-secondary);
 }
+.balance-card.savings::before { background-color: var(--color-success); }
 
-.balance-card.savings::before {
-  background-color: var(--color-success);
-}
-
+/* ── Legacy layout ── */
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
-
 .account-name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-text-muted);
 }
-
-.dark .account-name {
-  color: #94a3b8;
-}
-
+.dark .account-name { color: #94a3b8; }
 .account-number {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-muted);
   opacity: 0.8;
 }
-
-.dark .account-number {
-  color: #94a3b8;
-}
-
+.dark .account-number { color: #94a3b8; }
 .account-balance {
-  font-size: 40px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--color-primary);
-  letter-spacing: -1px;
-  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
 }
-
-.dark .account-balance {
-  color: var(--color-text-light);
-}
-
+.dark .account-balance { color: var(--color-text-light); }
 .available-balance {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-muted);
 }
+.dark .available-balance { color: #94a3b8; }
 
-.dark .available-balance {
-  color: #94a3b8;
+/* ── Tablet ── */
+@media (max-width: 768px) {
+  .balance-card { padding: 18px 16px; border-radius: 14px; }
+  .account-balance { font-size: 24px; }
 }
-
+/* ── Phone ── */
 @media (max-width: 480px) {
-  .balance-card {
-    padding: 20px 16px;
-  }
-  .card-header {
-    margin-bottom: 16px;
-  }
-  .account-name {
-    font-size: 14px;
-  }
-  .account-balance {
-    font-size: 26px;
-    margin-bottom: 4px;
-  }
-  .available-balance {
-    font-size: 12px;
-  }
+  .balance-card { padding: 14px 12px; border-radius: 12px; }
+  .card-header { margin-bottom: 10px; }
+  .account-name { font-size: 12px; }
+  .account-balance { font-size: 20px; margin-bottom: 4px; }
+  .available-balance { font-size: 11px; }
 }
 </style>

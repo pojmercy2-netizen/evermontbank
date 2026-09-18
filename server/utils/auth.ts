@@ -5,6 +5,9 @@ import { users } from '../database/schema/users'
 import { verifyAccessToken } from './jwt'
 import { unauthorized, forbidden } from './error'
 
+/** Validates that a string is a proper UUID v4 (or any UUID format Postgres accepts). */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export interface AuthContextUser {
   id: string
   email: string
@@ -30,6 +33,12 @@ export async function requireAuth(event: H3Event): Promise<AuthContextUser> {
 
   const token = authHeader.substring(7)
   const decoded = verifyAccessToken(token)
+
+  // Guard against mock/invalid tokens that have non-UUID subject IDs.
+  // Without this, Postgres throws "invalid input syntax for type uuid" → 500.
+  if (!UUID_REGEX.test(decoded.sub)) {
+    throw unauthorized('Invalid session token — please log in again')
+  }
 
   const db = useDb()
   const [user] = await db
