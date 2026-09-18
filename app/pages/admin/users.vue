@@ -92,6 +92,15 @@
                   >
                     <Icon name="lucide:shield-check" :size="14" />
                   </button>
+                  <button
+                    v-if="user.role !== 'superadmin'"
+                    class="action-icon-btn delete-btn"
+                    title="Delete User"
+                    :disabled="actionLoading === user.id"
+                    @click="handleDelete(user)"
+                  >
+                    <Icon name="lucide:trash-2" :size="14" />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -243,6 +252,24 @@ const handleRoleChange = async (user: AdminUser, newRole: string) => {
   }
 }
 
+const handleDelete = async (user: AdminUser) => {
+  if (!confirm(`Are you sure you want to permanently delete "${user.fullName || user.email}"? All their accounts and transaction history will be permanently deleted.`)) return
+  actionLoading.value = user.id
+  try {
+    const res = await auth.apiCall<any>(`/admin/users/${user.id}`, 'DELETE')
+    if (res.success) {
+      showToast(`User "${user.fullName || user.email}" deleted successfully.`)
+      users.value = users.value.filter(u => u.id !== user.id)
+    } else {
+      showToast(res.error || 'Failed to delete user.', 'error')
+    }
+  } catch (err: any) {
+    showToast(err.message || 'Network error deleting user.', 'error')
+  } finally {
+    actionLoading.value = null
+  }
+}
+
 onMounted(fetchUsers)
 </script>
 
@@ -306,6 +333,7 @@ onMounted(fetchUsers)
 .ban-btn:hover { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
 .unban-btn:hover { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3); }
 .view-btn:hover { background: rgba(99,102,241,0.15); color: #a5b4fc; border-color: rgba(99,102,241,0.3); }
+.delete-btn:hover { background: rgba(239,68,68,0.2); color: #f87171; border-color: rgba(239,68,68,0.35); }
 
 .empty-row { text-align: center; padding: 48px 16px !important; color: rgba(255,255,255,0.25); }
 .empty-icon { display: block; margin: 0 auto 12px; opacity: 0.3; }

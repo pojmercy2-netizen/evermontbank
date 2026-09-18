@@ -1,17 +1,20 @@
 import { withErrorHandler } from '../../../utils/error'
-import { requireAdmin } from '../../../utils/auth'
+import { requireActiveUser } from '../../../utils/auth'
 import { sendSuccess } from '../../../utils/response'
 import { getDepositSettings } from '../../../utils/depositSettings'
 
 export default withErrorHandler(async (event) => {
-  await requireAdmin(event)
+  await requireActiveUser(event)
 
   const settings = getDepositSettings()
 
+  // Filter only active wallets for users
+  const activeWallets = settings.wallets.filter(w => w.active !== false)
+
   return sendSuccess(event, {
-    wallets: settings.wallets,
+    wallets: activeWallets,
     bankTransfer: settings.bankTransfer,
     otherMethods: settings.otherMethods,
-    data: settings.wallets
+    data: activeWallets // direct array alias
   })
 })

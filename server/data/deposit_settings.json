@@ -1,0 +1,55 @@
+{
+  "wallets": [
+    {
+      "coin": "BTC",
+      "label": "Bitcoin (BTC)",
+      "network": "Bitcoin",
+      "address": "lklsjknfdmaldklfsknkdmlcel;f,md..e/cf,m.",
+      "active": true
+    },
+    {
+      "coin": "ETH",
+      "label": "Ethereum (ETH)",
+      "network": "ERC20 (Ethereum)",
+      "address": "pelkwjkjeklq32iuop4iuri2io4opid",
+      "active": true
+    },
+    {
+      "coin": "USDT",
+      "label": "Tether (USDT)",
+      "network": "TRC20 (Tron)",
+      "address": "e;wkljrfrwklelklrjfjrwleq;rkwfnrml;leqkrfw",
+      "active": true
+    }
+  ],
+  "bankTransfer": {
+    "enabled": true,
+    "bankName": "Evermont National Bank NA",
+    "accountName": "Evermont Treasury Operations Corp",
+    "accountNumber": "9988776655",
+    "routingNumber": "021000021",
+    "swiftCode": "EVBKUS33NYC",
+    "bankAddress": "100 Wall Street, New York, NY 10005",
+    "instructions": "Include reference memo in the transfer description",
+    "minAmount": 100,
+    "processingTime": "1 Business Day"
+  },
+  "otherMethods": {
+    "paypal": {
+      "enabled": true,
+      "email": "deposits@evermontbank.com",
+      "instructions": "Send via Friends & Family with Account Number"
+    },
+    "cashapp": {
+      "enabled": false,
+      "cashtag": "$EvermontBank",
+      "instructions": "Include your Evermont account number in the memo field."
+    },
+    "zelle": {
+      "enabled": false,
+      "email": "transfers@evermontbank.com",
+      "phone": "+1 (800) 555-0199",
+      "instructions": "Send via Zelle and upload your payment confirmation receipt."
+    }
+  }
+}

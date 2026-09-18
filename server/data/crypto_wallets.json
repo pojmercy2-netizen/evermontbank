@@ -3,18 +3,21 @@
     "coin": "BTC",
     "label": "Bitcoin (BTC)",
     "network": "Bitcoin",
-    "address": "lklsjknfdmaldklfsknkdmlcel;f,md..e/cf,m."
+    "address": "lklsjknfdmaldklfsknkdmlcel;f,md..e/cf,m.",
+    "active": true
   },
   {
     "coin": "ETH",
     "label": "Ethereum (ETH)",
     "network": "ERC20 (Ethereum)",
-    "address": "pelkwjkjeklq32iuop4iuri2io4opid"
+    "address": "pelkwjkjeklq32iuop4iuri2io4opid",
+    "active": true
   },
   {
     "coin": "USDT",
     "label": "Tether (USDT)",
     "network": "TRC20 (Tron)",
-    "address": "e;wkljrfrwklelklrjfjrwleq;rkwfnrml;leqkrfw"
+    "address": "e;wkljrfrwklelklrjfjrwleq;rkwfnrml;leqkrfw",
+    "active": true
   }
 ]

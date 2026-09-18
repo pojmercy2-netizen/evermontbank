@@ -70,6 +70,14 @@
                   <button class="icon-btn tx-btn" title="View Transactions" @click="openModal('transactions', user)">
                     <Icon name="lucide:list" />
                   </button>
+                  <button
+                    v-if="user.role !== 'superadmin'"
+                    class="icon-btn delete-btn"
+                    title="Delete User"
+                    @click="handleDeleteUser(user)"
+                  >
+                    <Icon name="lucide:trash-2" />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -408,6 +416,26 @@ const handleReverseTx = async (txId: string) => {
   } catch { showToast('Reversal failed.', 'error') }
 }
 
+const handleDeleteUser = async (user: AdminUser) => {
+  if (user.role === 'superadmin') {
+    showToast('Superadmin accounts cannot be deleted.', 'error')
+    return
+  }
+  if (!confirm(`Are you sure you want to permanently delete user "${user.full_name || user.email}"?\n\nThis will permanently delete their checking account, balances, and all associated transactions.`)) return
+
+  try {
+    const res = await auth.apiCall<any>(`/admin/users/${user.id}`, 'DELETE')
+    if (res.success) {
+      showToast(`User "${user.full_name || user.email}" deleted successfully.`)
+      users.value = users.value.filter(u => u.id !== user.id)
+    } else {
+      showToast(res.error || 'Failed to delete user.', 'error')
+    }
+  } catch (err: any) {
+    showToast(err.message || 'Error deleting user.', 'error')
+  }
+}
+
 onMounted(async () => {
   await fetchUsers()
   if (import.meta.client) {
@@ -471,6 +499,8 @@ onMounted(async () => {
 .edit-btn:hover    { background: rgba(99,102,241,0.25); }
 .tx-btn      { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.2); }
 .tx-btn:hover      { background: rgba(245,158,11,0.25); }
+.delete-btn  { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.2); }
+.delete-btn:hover  { background: rgba(239,68,68,0.28); color: #fff; }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .modal-box { background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1); overflow: hidden; }

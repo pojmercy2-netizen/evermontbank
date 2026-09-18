@@ -1,16 +1,16 @@
-import { readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { z } from 'zod'
-import { withErrorHandler, badRequest } from '../../../utils/error'
+import { withErrorHandler, badRequest, notFound } from '../../../utils/error'
 import { requireAdmin } from '../../../utils/auth'
 import { logAdminAction } from '../../../utils/adminLog'
 import { sendSuccess } from '../../../utils/response'
+import { getDepositSettings, saveDepositSettings } from '../../../utils/depositSettings'
 
 const updateWalletSchema = z.object({
-  coin: z.enum(['BTC', 'ETH', 'USDT']),
-  address: z.string().min(10, 'Wallet address is too short'),
+  coin: z.string().min(1, 'Coin identifier is required').transform(v => v.toUpperCase().trim()),
+  address: z.string().min(6, 'Wallet address is too short').trim().optional(),
   network: z.string().optional(),
-  label: z.string().optional()
+  label: z.string().optional(),
+  active: z.boolean().optional()
 })
 
 export default withErrorHandler(async (event) => {
@@ -23,28 +23,26 @@ export default withErrorHandler(async (event) => {
     return
   }
 
-  const { coin, address, network, label } = validated.data
+  const { coin, address, network, label, active } = validated.data
+  const settings = getDepositSettings()
 
-  const filePath = join(process.cwd(), 'server', 'data', 'crypto_wallets.json')
-  const wallets: Array<{ coin: string; label: string; network: string; address: string }> =
-    JSON.parse(readFileSync(filePath, 'utf-8'))
-
-  const idx = wallets.findIndex(w => w.coin === coin)
+  const idx = settings.wallets.findIndex(w => w.coin.toUpperCase() === coin)
   if (idx === -1) {
-    badRequest(`Coin "${coin}" not found in wallet config`)
+    notFound(`Coin "${coin}" not found in wallet configuration`)
     return
   }
 
-  const oldAddress = wallets[idx].address
+  const oldWallet = { ...settings.wallets[idx] }
 
-  wallets[idx] = {
-    ...wallets[idx],
-    address,
-    ...(network ? { network } : {}),
-    ...(label ? { label } : {})
+  settings.wallets[idx] = {
+    ...settings.wallets[idx],
+    ...(address ? { address } : {}),
+    ...(network !== undefined ? { network } : {}),
+    ...(label !== undefined ? { label } : {}),
+    ...(active !== undefined ? { active } : {})
   }
 
-  writeFileSync(filePath, JSON.stringify(wallets, null, 2), 'utf-8')
+  saveDepositSettings(settings)
 
   // Audit log
   await logAdminAction(event, {
@@ -52,8 +50,8 @@ export default withErrorHandler(async (event) => {
     action: 'UPDATE_WALLET_ADDRESS',
     targetType: 'crypto_wallets',
     targetId: coin,
-    details: { coin, oldAddress, newAddress: address }
+    details: { coin, oldWallet, updatedWallet: settings.wallets[idx] }
   })
 
-  return sendSuccess(event, wallets[idx], `${coin} wallet address updated successfully`)
+  return sendSuccess(event, settings.wallets[idx], `${coin} wallet updated successfully`)
 })
