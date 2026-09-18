@@ -102,7 +102,7 @@ const { error, isLoading, register } = useAuth()
 
 const handleSubmit = async () => {
   await register(
-    email.value,
+    email.value.trim().toLowerCase(),
     password.value,
     fullName.value,
     accountType.value,

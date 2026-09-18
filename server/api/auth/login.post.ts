@@ -7,6 +7,7 @@ import { verifyPassword, hashToken } from '../../utils/hash'
 import { signAccessToken, signRefreshToken, expiryToMs } from '../../utils/jwt'
 import { withErrorHandler, unauthorized, badRequest } from '../../utils/error'
 import { sendSuccess } from '../../utils/response'
+import { sendEmail, getLoginAlertEmailTemplate } from '../../utils/email'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -49,7 +50,7 @@ export default withErrorHandler(async (event) => {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.email, validated.email))
+    .where(eq(users.email, validated.email.toLowerCase().trim()))
     .limit(1)
 
   if (!user) {
@@ -99,8 +100,24 @@ export default withErrorHandler(async (event) => {
     })
     .returning()
 
-  // Return access_token and refresh_token (remember to send cookie or just JSON)
-  // Let's set a secure cookie for refresh token as well, and return access token in JSON
+  // Fire-and-forget login security alert email
+  const loginAlertContent = getLoginAlertEmailTemplate(
+    user.fullName,
+    user.email,
+    new Date(),
+    ipAddress,
+    deviceInfo || userAgent.substring(0, 100)
+  )
+  sendEmail({
+    to: user.email,
+    subject: '🔐 New Sign-In Detected – Evermont Bank',
+    text: loginAlertContent.text,
+    html: loginAlertContent.html
+  }).catch((err) => {
+    console.error('[Login Alert Email Error]', err)
+  })
+
+  // Set httpOnly refresh token cookie
   setCookie(event, 'refresh_token', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

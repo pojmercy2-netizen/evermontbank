@@ -63,19 +63,19 @@ useHead({
 
 const email = ref('')
 const password = ref('')
-const { error, isLoading, login } = useAuth()
+const { error, isLoading, login, apiCall } = useAuth()
 
 const handleLogin = async () => {
-  await login(email.value, password.value)
+  await login(email.value.trim().toLowerCase(), password.value)
 }
 
 const handleForgotPassword = async () => {
-  const userEmail = email.value || (import.meta.client ? window.prompt('Please enter your email address to reset your password:') : '')
+  const userEmail = (email.value.trim() || (import.meta.client ? window.prompt('Please enter your email address to reset your password:') : '')) || ''
   if (!userEmail) return
 
-  auth.isLoading.value = true
-  const res = await auth.apiCall<any>('/auth/forgot-password', 'POST', { email: userEmail })
-  auth.isLoading.value = false
+  isLoading.value = true
+  const res = await apiCall<any>('/auth/forgot-password', 'POST', { email: userEmail.trim().toLowerCase() })
+  isLoading.value = false
 
   if (res.success) {
     if (import.meta.client) {

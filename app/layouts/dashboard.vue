@@ -195,7 +195,13 @@ const handleLogout = () => {
 
 const handleChat = () => {
   closeSidebar()
-  alert('Connecting to live chat agent...')
+  if (typeof (window as any)?.Tawk_API?.maximize === 'function') {
+    (window as any).Tawk_API.maximize()
+  } else if (typeof (window as any)?.Tawk_API?.toggle === 'function') {
+    (window as any).Tawk_API.toggle()
+  } else {
+    alert('Connecting to live chat agent...')
+  }
 }
 
 const fullName = ref('John Smith')

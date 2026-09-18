@@ -475,3 +475,207 @@ The Evermont Bank Team
 
   return { text, html }
 }
+
+/**
+ * Generate a login security-alert email — sent on every successful login.
+ */
+export function getLoginAlertEmailTemplate(
+  fullName: string,
+  email: string,
+  loginTime: Date,
+  ipAddress: string,
+  deviceInfo: string
+): { text: string; html: string } {
+  const formattedTime = loginTime.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  })
+
+  const text = `
+Security Alert – New Sign-In Detected
+
+Hi ${fullName},
+
+A new sign-in to your Evermont Bank account was detected.
+
+Sign-In Details:
+  Time      : ${formattedTime}
+  IP Address: ${ipAddress}
+  Device    : ${deviceInfo}
+
+If this was you, no action is needed — you can safely ignore this email.
+
+If you did NOT sign in, your account may be at risk. Please change your password immediately and contact our support team at support@evermontbank.com.
+
+Thank you for banking with Evermont Bank.
+
+The Evermont Bank Security Team
+  `
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Sign-In to Your Evermont Bank Account</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #334155;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f8fafc;
+      padding: 40px 20px;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      padding: 40px 32px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.03em;
+    }
+    .logo-accent { color: #60a5fa; }
+    .alert-badge {
+      display: inline-block;
+      margin-top: 12px;
+      background-color: rgba(234,179,8,0.15);
+      border: 1px solid rgba(234,179,8,0.4);
+      color: #fde047;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 999px;
+    }
+    .content {
+      padding: 40px 32px;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 15px;
+      color: #475569;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .details-box {
+      background-color: #f1f5f9;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #64748b; font-weight: 600; }
+    .detail-value { color: #0f172a; font-weight: 500; text-align: right; max-width: 65%; word-break: break-word; }
+    .warning-box {
+      background-color: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      color: #9a3412;
+    }
+    .warning-box strong { display: block; margin-bottom: 4px; }
+    .footer {
+      background-color: #f8fafc;
+      padding: 32px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .footer-links { margin-bottom: 12px; }
+    .footer-link { color: #3b82f6; text-decoration: none; margin: 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <div class="logo">EVERMONT<span class="logo-accent">BANK</span></div>
+        <div class="alert-badge">🔐 Security Alert</div>
+      </div>
+      <div class="content">
+        <h1>New Sign-In Detected, ${fullName}</h1>
+        <p>We detected a successful sign-in to your Evermont Bank account. Here are the details:</p>
+
+        <div class="details-box">
+          <div class="detail-row">
+            <span class="detail-label">Time</span>
+            <span class="detail-value">${formattedTime}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">IP Address</span>
+            <span class="detail-value">${ipAddress}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Device / Browser</span>
+            <span class="detail-value">${deviceInfo}</span>
+          </div>
+        </div>
+
+        <p>✅ <strong>If this was you</strong> — no action is needed. You can safely ignore this message.</p>
+
+        <div class="warning-box">
+          <strong>⚠️ If you did NOT sign in:</strong>
+          Your account may be at risk. Change your password immediately and contact our support team at <a href="mailto:support@evermontbank.com" style="color:#9a3412;">support@evermontbank.com</a>.
+        </div>
+
+        <p style="font-size: 13px; color: #94a3b8;">This is an automated security notification from Evermont Bank. Please do not reply directly to this email.</p>
+      </div>
+      <div class="footer">
+        <div class="footer-links">
+          <a href="#" class="footer-link">Privacy Policy</a> |
+          <a href="#" class="footer-link">Terms &amp; Conditions</a> |
+          <a href="#" class="footer-link">Help Center</a>
+        </div>
+        <p>© 2012 – ${new Date().getFullYear()} Evermont Bank. All rights reserved.<br>Member FDIC. Equal Housing Lender.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `
+
+  return { text, html }
+}
